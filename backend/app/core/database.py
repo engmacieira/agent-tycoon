@@ -1,27 +1,34 @@
 """
-Gerenciamento de conexão SQLAlchemy 2.0 (PostgreSQL / SQLite híbrido).
+Gerenciamento de conexão SQLAlchemy 2.0 (Cloud SQL PostgreSQL / SQLite híbrido).
 """
 
-from typing import Generator
+from typing import Any, Dict, Generator
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.config import get_settings
+from app.core.config import settings
 from app.models.office import Base
 
-settings = get_settings()
-
 is_sqlite = settings.DATABASE_URL.startswith("sqlite")
-connect_args = {"check_same_thread": False} if is_sqlite else {}
+is_postgresql = settings.DATABASE_URL.startswith("postgresql")
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args=connect_args,
-    pool_pre_ping=not is_sqlite,
-    future=True,
-)
+engine_kwargs: Dict[str, Any] = {"future": True}
+if is_sqlite:
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+elif is_postgresql:
+    engine_kwargs.update(
+        {
+            "pool_pre_ping": True,
+            "pool_size": 5,
+            "max_overflow": 10,
+        }
+    )
+else:
+    engine_kwargs["pool_pre_ping"] = True
+
+engine = create_engine(settings.DATABASE_URL, **engine_kwargs)
 
 
 @event.listens_for(Engine, "connect")
