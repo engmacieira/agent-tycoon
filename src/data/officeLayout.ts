@@ -79,21 +79,21 @@ export const ROOM_CONFIGS: RoomConfig[] = [
     deskSlots: [
       {
         id: 'coord-team',
-        label: 'Estação Norte',
+        label: 'Estação Norte (Atlas)',
         roleTitle: 'Coordenador de Equipe',
         deskTile: { x: 43, y: 4 },
         seatTile: { x: 43, y: 3 },
         facing: 'down',
-        occupiedByAgentId: null,
+        occupiedByAgentId: 'coord-team',
       },
       {
         id: 'coord-finance',
-        label: 'Estação Sul',
+        label: 'Estação Sul (Vega)',
         roleTitle: 'Coordenador Financeiro',
         deskTile: { x: 43, y: 5 },
         seatTile: { x: 43, y: 6 },
         facing: 'up',
-        occupiedByAgentId: null,
+        occupiedByAgentId: 'coord-finance',
       },
     ],
   },
@@ -279,8 +279,8 @@ ROOM_CONFIGS[1].deskSlots[5].roleTitle = 'Participante';
 
 export const PLANNED_STAFF_ROSTER: StaffRosterSlot[] = [
   { slotNumber: 1, title: 'CEO (Dono)', roomId: 'diretoria', roomName: 'Diretoria', status: 'active', agentName: 'Dono' },
-  { slotNumber: 2, title: 'Coordenador de Equipe', roomId: 'coordenadores', roomName: 'Coordenadores', status: 'vacant' },
-  { slotNumber: 3, title: 'Coordenador Financeiro', roomId: 'coordenadores', roomName: 'Coordenadores', status: 'vacant' },
+  { slotNumber: 2, title: 'Coordenador de Equipe', roomId: 'coordenadores', roomName: 'Coordenadores', status: 'active', agentName: 'Atlas' },
+  { slotNumber: 3, title: 'Coordenador Financeiro', roomId: 'coordenadores', roomName: 'Coordenadores', status: 'active', agentName: 'Vega' },
   { slotNumber: 4, title: 'Agente Administrativo 01', roomId: 'admin', roomName: 'Administrativo', status: 'vacant' },
   { slotNumber: 5, title: 'Agente Administrativo 02', roomId: 'admin', roomName: 'Administrativo', status: 'vacant' },
   { slotNumber: 6, title: 'Engenheiro Backend 01', roomId: 'backend', roomName: 'Backend', status: 'vacant' },

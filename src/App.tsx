@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { BriefingModal } from './components/BriefingModal';
+import { HiringModal } from './components/HiringModal';
 import { InspectorDrawer } from './components/InspectorDrawer';
 import { Minimap } from './components/Minimap';
 import { OfficeCanvas } from './components/OfficeCanvas';
@@ -20,12 +22,12 @@ export default function App() {
           <div className="relative flex-1 h-full overflow-hidden">
             <OfficeCanvas />
 
-            {/* Bottom-Left Navigation & Minimap Overlay */}
-            <div className="pointer-events-none absolute bottom-3 left-3 right-3 flex items-end gap-3 z-10">
+            {/* Bottom Navigation & Minimap Overlay */}
+            <div className="pointer-events-none absolute bottom-3 left-3 right-3 flex items-end gap-3 z-10 min-w-0">
               <div className="pointer-events-auto shrink-0 hidden sm:block">
                 <Minimap />
               </div>
-              <div className="pointer-events-auto">
+              <div className="pointer-events-auto flex-1 min-w-0">
                 <RoomQuickBar />
               </div>
             </div>
@@ -33,6 +35,9 @@ export default function App() {
 
           <InspectorDrawer />
         </main>
+
+        <BriefingModal />
+        <HiringModal />
       </div>
     </OfficeProvider>
   );

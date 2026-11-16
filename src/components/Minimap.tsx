@@ -1,14 +1,16 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MAP_COLS, MAP_ROWS, TILE_SIZE } from '../data/officeLayout';
 import { useOffice } from '../context/OfficeContext';
 
-const SCALE = 3.5; // 54 * 3.5 = 189px wide, 38 * 3.5 = 133px tall
+const SCALE = 3.2; // 54 * 3.2 = 173px wide, 38 * 3.2 = 122px tall
 const MINI_W = Math.round(MAP_COLS * SCALE);
 const MINI_H = Math.round(MAP_ROWS * SCALE);
 
 export const Minimap: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const { rooms, agentsRef, cameraRef, selectedRoomId, focusRoom, setFollowCeo } = useOffice();
+  const [isScrubbing, setIsScrubbing] = useState(false);
+  const { rooms, agentsRef, cameraRef, selectedRoomId, ceoCurrentRoomId, setFollowCeo } =
+    useOffice();
 
   useEffect(() => {
     let rafId = 0;
@@ -31,34 +33,44 @@ export const Minimap: React.FC = () => {
             const rw = room.bounds.w * SCALE;
             const rh = room.bounds.h * SCALE;
 
-            ctx.fillStyle = room.id === selectedRoomId ? room.accentColor : `${room.accentColor}44`;
+            const isSelected = room.id === selectedRoomId;
+            const isCeoHere = room.id === ceoCurrentRoomId;
+
+            ctx.fillStyle = isSelected
+              ? `${room.accentColor}88`
+              : isCeoHere
+              ? `${room.accentColor}55`
+              : `${room.accentColor}33`;
             ctx.fillRect(rx, ry, rw, rh);
 
-            ctx.strokeStyle = room.id === selectedRoomId ? '#F8FAFC' : `${room.accentColor}AA`;
+            ctx.strokeStyle = isSelected
+              ? '#F8FAFC'
+              : isCeoHere
+              ? '#F59E0B'
+              : `${room.accentColor}AA`;
             ctx.lineWidth = 1;
             ctx.strokeRect(rx + 0.5, ry + 0.5, rw - 1, rh - 1);
           }
 
-          // Draw camera viewport box
+          // Draw camera viewport rectangle
           const cam = cameraRef.current;
           const viewW = (window.innerWidth / cam.zoom / TILE_SIZE) * SCALE;
           const viewH = ((window.innerHeight - 56) / cam.zoom / TILE_SIZE) * SCALE;
           const vx = (cam.x / TILE_SIZE) * SCALE - viewW / 2;
           const vy = (cam.y / TILE_SIZE) * SCALE - viewH / 2;
 
-          ctx.strokeStyle = 'rgba(248, 250, 252, 0.65)';
+          ctx.strokeStyle = 'rgba(248, 250, 252, 0.8)';
           ctx.lineWidth = 1;
           ctx.strokeRect(vx, vy, viewW, viewH);
 
-          // Draw CEO position dot
-          const ceo = agentsRef.current.find((a) => a.id === 'ceo');
-          if (ceo) {
-            const cx = (ceo.position.x + 0.5) * SCALE;
-            const cy = (ceo.position.y + 0.5) * SCALE;
+          // Draw all active agents (Dono, Atlas, Vega)
+          for (const agent of agentsRef.current) {
+            const ax = (agent.position.x + 0.5) * SCALE;
+            const ay = (agent.position.y + 0.5) * SCALE;
             ctx.fillStyle = '#0F172A';
-            ctx.fillRect(cx - 3, cy - 3, 6, 6);
-            ctx.fillStyle = '#F59E0B';
-            ctx.fillRect(cx - 2, cy - 2, 4, 4);
+            ctx.fillRect(ax - 3, ay - 3, 6, 6);
+            ctx.fillStyle = agent.badgeColor ?? '#F59E0B';
+            ctx.fillRect(ax - 2, ay - 2, 4, 4);
           }
         }
       }
@@ -67,46 +79,43 @@ export const Minimap: React.FC = () => {
 
     rafId = requestAnimationFrame(renderMini);
     return () => cancelAnimationFrame(rafId);
-  }, [rooms, agentsRef, cameraRef, selectedRoomId]);
+  }, [rooms, agentsRef, cameraRef, selectedRoomId, ceoCurrentRoomId]);
 
-  const handleMinimapClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+  const jumpCameraToMinimapPos = (clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = Math.max(0, Math.min(MINI_W, clientX - rect.left));
+    const my = Math.max(0, Math.min(MINI_H, clientY - rect.top));
     const tileX = mx / SCALE;
     const tileY = my / SCALE;
 
-    // Check if user clicked inside a specific room
-    const clickedRoom = rooms.find(
-      (r) =>
-        tileX >= r.bounds.x &&
-        tileX < r.bounds.x + r.bounds.w &&
-        tileY >= r.bounds.y &&
-        tileY < r.bounds.y + r.bounds.h
-    );
-
-    if (clickedRoom) {
-      focusRoom(clickedRoom.id);
-    } else {
-      setFollowCeo(false);
-      cameraRef.current.x = tileX * TILE_SIZE;
-      cameraRef.current.y = tileY * TILE_SIZE;
-    }
+    setFollowCeo(false);
+    cameraRef.current.x = tileX * TILE_SIZE;
+    cameraRef.current.y = tileY * TILE_SIZE;
   };
 
   return (
     <div className="bg-[#0F172A]/95 border-2 border-slate-700/90 p-2 pixel-panel select-none">
       <div className="flex items-center justify-between mb-1.5 px-0.5">
-        <span className="font-pixel text-[10px] text-slate-300 tracking-wide">PLANTA BAIXA</span>
-        <span className="font-mono text-[10px] text-slate-400 tabular-nums">54×38</span>
+        <span className="font-pixel text-[10px] text-slate-200 tracking-wide">MAPA GERAL</span>
+        <span className="font-mono text-[10px] text-slate-400">Clique p/ mover</span>
       </div>
       <canvas
         ref={canvasRef}
         width={MINI_W}
         height={MINI_H}
-        onClick={handleMinimapClick}
+        onPointerDown={(e) => {
+          setIsScrubbing(true);
+          jumpCameraToMinimapPos(e.clientX, e.clientY);
+        }}
+        onPointerMove={(e) => {
+          if (isScrubbing) jumpCameraToMinimapPos(e.clientX, e.clientY);
+        }}
+        onPointerUp={() => setIsScrubbing(false)}
+        onPointerLeave={() => setIsScrubbing(false)}
         className="pixel-canvas block border border-slate-700 cursor-pointer"
-        title="Clique em uma sala no minimapa para focar a câmera"
+        title="Clique ou arraste no minimapa para centralizar a câmera instantaneamente"
       />
     </div>
   );
