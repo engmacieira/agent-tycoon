@@ -1,0 +1,6 @@
+{
+  "name": "PixelHQ 8-Bits — Escritório Virtual de Agentes",
+  "description": "Escritório virtual 8-bits em estilo Tycoon com planta baixa de 13 zonas, movimentação do CEO por teclado e pathfinding A*, e arquitetura preparada para agentes de IA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
